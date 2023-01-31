@@ -85,7 +85,7 @@ class Generator(nn.Module):
 
     def __init__(self,
                  in_size: int = 100,
-                 start: int = 16,
+                 start: int = 512,
                  img_channels: int = 3,
                  img_size: int = 32):
         super().__init__()
@@ -103,7 +103,7 @@ class Generator(nn.Module):
         current_channels = start
         while img_size > 1:
             start = current_channels
-            current_channels = start * 2
+            current_channels = start // 2
 
             current = [
                 nn.ConvTranspose2d(start, current_channels,
@@ -149,7 +149,7 @@ class Generator(nn.Module):
 class Discriminator(nn.Module):
 
     def __init__(self,
-                 start: int = 256,
+                 start: int = 32,
                  img_channels: int = 3,
                  img_size: int = 32):
         super().__init__()
@@ -167,7 +167,7 @@ class Discriminator(nn.Module):
         img_size = img_size // 2
         current_channels = start
         while img_size > 2:
-            current_channels = start // 2
+            current_channels = start * 2
             current = [
                 nn.Conv2d(start, current_channels,
                           kernel_size=4,
@@ -274,7 +274,7 @@ class GAN(LightningModule):
             return d_loss
 
     def configure_optimizers(self):
-        lr = 0.0001
+        lr = 0.00005
 
         opt_g = torch.optim.Adam(
             self.generator.parameters(), lr=lr, betas=(0.5, 0.999))
