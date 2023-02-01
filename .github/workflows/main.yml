@@ -1,0 +1,38 @@
+name: tests and linting
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.7"
+          cache: "poetry"
+      - run: poetry install
+
+      - name: Lint with pylint
+        run: |
+          poetry run pylint wbm_snapshot --fail-under=10
+      - name: Lint with mypy
+        run: |
+          poetry run mypy wbm_snapshot
+      - name: Lint tests with pylint
+        run: |
+          poetry run pylint tests --fail-under=10
+      - name: Lint tests with mypy
+        run: |
+          poetry run mypy tests
+
+      - name: Test with pytest
+        run: |
+          poetry run pytest . --cov=tests --cov-fail-under=90  --cov-report=term-missing
