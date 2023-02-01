@@ -25,13 +25,13 @@ jobs:
           poetry run pylint src --fail-under=10
       - name: Lint with mypy
         run: |
-          poetry run mypy src
+          poetry run mypy --install-types src
       - name: Lint tests with pylint
         run: |
           poetry run pylint tests --fail-under=10
       - name: Lint tests with mypy
         run: |
-          poetry run mypy tests
+          poetry run mypy --install-types tests
 
       - name: Test with pytest
         run: |

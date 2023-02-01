@@ -5,10 +5,11 @@ from torchvision.datasets import CIFAR10, MNIST
 from pytorch_lightning import LightningDataModule
 
 
+# pylint: disable=too-many-instance-attributes
 class MNISTDataModule(LightningDataModule):
     """Data module for MNIST dataset."""
 
-    def __init__(self,
+    def __init__(self,  # pylint: disable=too-many-arguments
                  data_path: str,
                  batch_size: int = 4,
                  num_workers: int = 1,
@@ -77,11 +78,13 @@ class MNISTDataModule(LightningDataModule):
                           shuffle=False,
                           num_workers=self.num_workers)
 
+# pylint: disable=too-many-instance-attributes
+
 
 class CIFAR10DataModule(LightningDataModule):
     """Data module for CIFAR10 dataset."""
 
-    def __init__(self,
+    def __init__(self,  # pylint: disable=too-many-arguments
                  data_path: str,
                  batch_size: int = 4,
                  num_workers: int = 1,

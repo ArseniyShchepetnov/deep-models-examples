@@ -2,8 +2,8 @@
 from typing import List, Optional, Literal, Tuple
 
 import torch
-import torch.nn as nn
 import torchvision
+from torch import nn
 from pytorch_lightning import LightningModule
 
 SoftLabelsType = Literal["fixed", "random"]
@@ -12,7 +12,7 @@ SoftLabelsType = Literal["fixed", "random"]
 class Generator(nn.Module):
     """Generator network."""
 
-    def __init__(self,
+    def __init__(self,  # pylint: disable=too-many-arguments
                  in_size: int = 100,
                  channels: int = 512,
                  img_channels: int = 3,
@@ -36,7 +36,8 @@ class Generator(nn.Module):
         for _ in range(max_conv - 2):
             out_channels = int(channels / 2)
             convs += [
-                nn.ConvTranspose2d(channels, out_channels,  # image size: img_size / 2
+                # image size: img_size / 2
+                nn.ConvTranspose2d(channels, out_channels,
                                    kernel_size=4,
                                    stride=2,
                                    padding=1,
@@ -60,25 +61,26 @@ class Generator(nn.Module):
         self.layers = nn.Sequential(*convs)
 
     def forward(self, inp: torch.Tensor) -> torch.Tensor:
+        """Reimplement forward."""
         res = self.layers(inp)
         return res[:, :, :self.img_size, :self.img_size]
 
     def _initialize_weights(self) -> None:
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                nn.init.normal_(m.weight, 0.0, 0.02)
-                if m.bias is not None:
-                    nn.init.constant_(m.bias, 0)
-            elif isinstance(m, nn.BatchNorm2d):
-                nn.init.normal_(m.weight, 1.0, 0.02)
-                if m.bias is not None:
-                    nn.init.constant_(m.bias, 0)
+        for module in self.modules():
+            if isinstance(module, nn.Conv2d):
+                nn.init.normal_(module.weight, 0.0, 0.02)
+                if module.bias is not None:
+                    nn.init.constant_(module.bias, 0)
+            elif isinstance(module, nn.BatchNorm2d):
+                nn.init.normal_(module.weight, 1.0, 0.02)
+                if module.bias is not None:
+                    nn.init.constant_(module.bias, 0)
 
 
 class Discriminator(nn.Module):
     """Discriminator network."""
 
-    def __init__(self,
+    def __init__(self,  # pylint: disable=too-many-arguments
                  channels: int = 32,
                  img_channels: int = 3,
                  img_size: int = 32,
@@ -125,15 +127,16 @@ class Discriminator(nn.Module):
         self.out_activation = nn.Sigmoid()
 
     def forward(self, inp: torch.Tensor) -> torch.Tensor:
+        """Reimplement forward."""
         res = self.layers(inp)
         res = res[:, :, 0, 0]
         return self.out_activation(res)
 
 
-class DCGAN(LightningModule):
+class DCGAN(LightningModule):  # pylint: disable=too-many-instance-attributes,too-many-ancestors
     """Deep Convolutional GAN"""
 
-    def __init__(self,
+    def __init__(self,  # pylint: disable=too-many-arguments
                  noise_size: int = 100,
                  channels: int = 512,
                  img_size: int = 32,
@@ -160,7 +163,8 @@ class DCGAN(LightningModule):
                                            img_size=img_size,
                                            img_channels=img_channels)
 
-        self.validation_z = torch.randn(8, noise_size, 1, 1)
+        self.validation_noise = torch.randn(8,  # pylint: disable=no-member
+                                            noise_size, 1, 1)
 
         # self.example_input_array = torch.zeros(2, self.hparams.latent_dim)
 
@@ -170,15 +174,17 @@ class DCGAN(LightningModule):
     def forward(self, z: torch.Tensor):  # pylint: disable=arguments-differ
         return self.generator(z)
 
-    def adversarial_loss(self, y_hat: torch.Tensor, y: torch.Tensor):
-        return self.criterion(y_hat, y)
+    def adversarial_loss(self, predicted: torch.Tensor, true: torch.Tensor):
+        """Calculate loss."""
+        return self.criterion(predicted, true)
 
     def generate_true_labels(self,
                              images: torch.Tensor,
                              soft_labels: Optional[SoftLabelsType] = None) \
             -> torch.Tensor:
         """Returns tensor with true labels"""
-        labels = torch.ones(images.size(0), 1, dtype=images.dtype)
+        # pylint: disable=no-member
+        labels = torch.ones(images.size(0), 1,  dtype=images.dtype)
         if soft_labels:
             if soft_labels == "fixed":
                 labels -= self.soft_labels_value
@@ -191,6 +197,7 @@ class DCGAN(LightningModule):
                               soft_labels: Optional[SoftLabelsType] = None) \
             -> torch.Tensor:
         """Returns false labels."""
+        # pylint: disable=no-member
         labels = torch.zeros(images.size(0), 1, dtype=images.dtype)
         if soft_labels:
             if soft_labels == "fixed":
@@ -201,11 +208,14 @@ class DCGAN(LightningModule):
 
     def generate_input_noise(self, images: torch.Tensor) -> torch.Tensor:
         """Generate input noise for generator."""
-        return torch.randn(images.size(0),
+        return torch.randn(images.size(0),  # pylint: disable=no-member
                            self.noise_size, 1, 1,
                            dtype=images.dtype)
 
-    def training_step(self, batch, batch_idx, optimizer_idx: int):  # pylint: disable=arguments-differ
+    def training_step(self,  # pylint: disable=arguments-differ, too-many-locals
+                      batch,
+                      batch_idx,
+                      optimizer_idx: int) -> torch.Tensor:
         imgs, _ = batch
 
         # sample noise
@@ -225,9 +235,10 @@ class DCGAN(LightningModule):
 
             sample_imgs = synthetic[:6]
             grid = torchvision.utils.make_grid(sample_imgs)
-            self.logger.experiment.add_image("generated_images",
-                                             grid, batch_idx)
-            return g_loss
+
+            self.logger.experiment.add_image(  # type: ignore
+                "generated_images", grid, batch_idx)
+            loss = g_loss
 
         # train discriminator
         if optimizer_idx == 0:
@@ -248,7 +259,9 @@ class DCGAN(LightningModule):
             self.log("discriminator_loss", d_loss, prog_bar=True)
             self.log("real_loss", real_loss, prog_bar=False)
             self.log("fake_loss", fake_loss, prog_bar=False)
-            return d_loss
+            loss = d_loss
+
+        return loss
 
     def configure_optimizers(self):
         optimizers = [
@@ -262,10 +275,11 @@ class DCGAN(LightningModule):
         return optimizers, []
 
     def on_validation_epoch_end(self):
-        noise = self.validation_z.type_as(self.generator.model[0].weight)
+        noise = self.validation_noise.type_as(self.generator.model[0].weight)
 
         # log sampled images
         sample_imgs = self(noise)
         grid = torchvision.utils.make_grid(sample_imgs)
+        # type: ignore
         self.logger.experiment.add_image("generated_images_val",
                                          grid, self.current_epoch)
