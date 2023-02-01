@@ -59,6 +59,7 @@ class Generator(nn.Module):
             nn.Tanh()
         ]
         self.layers = nn.Sequential(*convs)
+        self.last_channels = out_channels
 
     def forward(self, inp: torch.Tensor) -> torch.Tensor:
         """Reimplement forward."""
@@ -123,7 +124,6 @@ class Discriminator(nn.Module):
                       padding=1,
                       bias=False)
         )
-
         self.out_activation = nn.Sigmoid()
 
     def forward(self, inp: torch.Tensor) -> torch.Tensor:
@@ -159,7 +159,8 @@ class DCGAN(LightningModule):  # pylint: disable=too-many-instance-attributes,to
                                    channels=channels,
                                    img_size=img_size,
                                    img_channels=img_channels)
-        self.discriminator = Discriminator(channels=channels,
+        generator_last_channels = self.generator.last_channels
+        self.discriminator = Discriminator(channels=generator_last_channels,
                                            img_size=img_size,
                                            img_channels=img_channels)
 
@@ -184,7 +185,8 @@ class DCGAN(LightningModule):  # pylint: disable=too-many-instance-attributes,to
             -> torch.Tensor:
         """Returns tensor with true labels"""
         # pylint: disable=no-member
-        labels = torch.ones(images.size(0), 1,  dtype=images.dtype)
+        labels = torch.ones(images.size(0), 1,  dtype=images.dtype,
+                            device=self.device)
         if soft_labels:
             if soft_labels == "fixed":
                 labels -= self.soft_labels_value
@@ -198,7 +200,8 @@ class DCGAN(LightningModule):  # pylint: disable=too-many-instance-attributes,to
             -> torch.Tensor:
         """Returns false labels."""
         # pylint: disable=no-member
-        labels = torch.zeros(images.size(0), 1, dtype=images.dtype)
+        labels = torch.zeros(images.size(0), 1, dtype=images.dtype,
+                             device=self.device)
         if soft_labels:
             if soft_labels == "fixed":
                 labels += self.soft_labels_value
@@ -210,7 +213,8 @@ class DCGAN(LightningModule):  # pylint: disable=too-many-instance-attributes,to
         """Generate input noise for generator."""
         return torch.randn(images.size(0),  # pylint: disable=no-member
                            self.noise_size, 1, 1,
-                           dtype=images.dtype)
+                           dtype=images.dtype,
+                           device=self.device)
 
     def training_step(self,  # pylint: disable=arguments-differ, too-many-locals
                       batch,
