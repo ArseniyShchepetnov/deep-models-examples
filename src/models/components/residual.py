@@ -1,5 +1,5 @@
 """Residual layers for CNN."""
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import torch
 from torch import nn
@@ -8,7 +8,7 @@ from torch import nn
 class ResidualBlock(nn.Module):
     """Residual block implementation."""
 
-    def __init__(self,
+    def __init__(self,  # pylint: disable=too-many-arguments
                  channels: int,
                  n_layers: int,
                  kernel_size: int = 3,
@@ -39,6 +39,6 @@ class ResidualBlock(nn.Module):
     def forward(self, inp: torch.Tensor) -> torch.Tensor:
         """Forward pass."""
         output = self.layers(inp)
-        add = torch.add(output, inp)
+        add = torch.add(output, inp)  # pylint: disable=no-member
         result = self.activation(add)
         return result

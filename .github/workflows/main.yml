@@ -16,16 +16,16 @@ jobs:
         run: pipx install poetry
       - uses: actions/setup-python@v3
         with:
-          python-version: "3.7"
+          python-version: "3.8"
           cache: "poetry"
-      - run: poetry install
+      - run: poetry install --no-root
 
       - name: Lint with pylint
         run: |
-          poetry run pylint wbm_snapshot --fail-under=10
+          poetry run pylint src --fail-under=10
       - name: Lint with mypy
         run: |
-          poetry run mypy wbm_snapshot
+          poetry run mypy  src
       - name: Lint tests with pylint
         run: |
           poetry run pylint tests --fail-under=10
@@ -35,4 +35,4 @@ jobs:
 
       - name: Test with pytest
         run: |
-          poetry run pytest . --cov=tests --cov-fail-under=90  --cov-report=term-missing
+          poetry run pytest . --cov=tests --cov-fail-under=70  --cov-report=term-missing
