@@ -22,10 +22,10 @@ jobs:
 
       - name: Lint with pylint
         run: |
-          poetry run pylint wbm_snapshot --fail-under=10
+          poetry run pylint src --fail-under=10
       - name: Lint with mypy
         run: |
-          poetry run mypy wbm_snapshot
+          poetry run mypy src
       - name: Lint tests with pylint
         run: |
           poetry run pylint tests --fail-under=10
