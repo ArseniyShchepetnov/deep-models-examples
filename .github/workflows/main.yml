@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: "3.7"
           cache: "poetry"
-      - run: poetry install
+      - run: poetry install --no-root
 
       - name: Lint with pylint
         run: |
