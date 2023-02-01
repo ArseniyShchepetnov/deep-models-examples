@@ -185,7 +185,8 @@ class DCGAN(LightningModule):  # pylint: disable=too-many-instance-attributes,to
             -> torch.Tensor:
         """Returns tensor with true labels"""
         # pylint: disable=no-member
-        labels = torch.ones(images.size(0), 1,  dtype=images.dtype,
+        labels = torch.ones(images.size(0), 1,  # type:ignore
+                            dtype=images.dtype,
                             device=self.device)
         if soft_labels:
             if soft_labels == "fixed":
@@ -200,7 +201,8 @@ class DCGAN(LightningModule):  # pylint: disable=too-many-instance-attributes,to
             -> torch.Tensor:
         """Returns false labels."""
         # pylint: disable=no-member
-        labels = torch.zeros(images.size(0), 1, dtype=images.dtype,
+        labels = torch.zeros(images.size(0), 1,  # type:ignore
+                             dtype=images.dtype,
                              device=self.device)
         if soft_labels:
             if soft_labels == "fixed":
@@ -211,7 +213,8 @@ class DCGAN(LightningModule):  # pylint: disable=too-many-instance-attributes,to
 
     def generate_input_noise(self, images: torch.Tensor) -> torch.Tensor:
         """Generate input noise for generator."""
-        return torch.randn(images.size(0),  # pylint: disable=no-member
+        # pylint: disable=no-member
+        return torch.randn(images.size(0),  # type:ignore
                            self.noise_size, 1, 1,
                            dtype=images.dtype,
                            device=self.device)
