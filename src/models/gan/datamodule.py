@@ -101,7 +101,6 @@ class CIFAR10DataModule(LightningDataModule):
             transform = transforms.Compose(
                 [
                     transforms.ToTensor(),
-                    transforms.Lambda(lambda x: x.repeat(3, 1, 1)),
                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                 ]
             )
