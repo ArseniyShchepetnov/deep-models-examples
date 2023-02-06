@@ -1,7 +1,7 @@
 """Test GAN classes."""
 import torch
 
-from src.models.gan.dcgan import Discriminator, Generator, DCGAN
+from src.models.dcgan import Discriminator, Generator, DCGAN
 
 
 def test_discriminator_28():
