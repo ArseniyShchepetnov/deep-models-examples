@@ -1,10 +1,11 @@
 """Convolutional components."""
-from typing import List, Optional
+from typing import List, Optional, Union, Tuple
 
 from torch import nn
 
 
 def cnn_path(channels: List[int],
+             kernel_size: Union[int, Tuple[int, int]] = 3,
              batch_norm: bool = True,
              dropout: Optional[float] = None,
              transpose: bool = False,
@@ -19,9 +20,13 @@ def cnn_path(channels: List[int],
     layers: List[nn.Module] = []
     for in_channels, out_channels in zip(channels[:-1], channels[1:]):
         if transpose:
-            conv = nn.ConvTranspose2d(in_channels, out_channels, **kwargs)
+            conv = nn.ConvTranspose2d(in_channels, out_channels,
+                                      kernel_size=kernel_size,
+                                      **kwargs)
         else:
-            conv = nn.Conv2d(in_channels, out_channels, **kwargs)
+            conv = nn.Conv2d(in_channels, out_channels,
+                             kernel_size=kernel_size,
+                             **kwargs)
         layers.append(conv)
 
         if batch_norm:
