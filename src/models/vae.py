@@ -47,7 +47,9 @@ class VaeEncoder(nn.Module):
 
     def forward(self, inp: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """Reimplement forward pass."""
+        print(inp.size())
         res = self.layers(inp)
+        print(res.size())
         flat = torch.flatten(res, start_dim=1)
         mean = self.latent_mean(flat)
         log_var = self.latent_log_var(flat)
@@ -132,6 +134,8 @@ class CnnVae(LightningModule):  # pylint: disable=too-many-ancestors
         self.kld_weight = kld_weight
         self.img_size = img_size
 
+        self.validation_noise = torch.randn(8, latent_size, 1, 1)
+
     # pylint: disable = arguments-differ
     def forward(self, imgs: torch.Tensor) \
             -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -192,10 +196,8 @@ class CnnVae(LightningModule):  # pylint: disable=too-many-ancestors
 
     def on_validation_epoch_end(self):
         noise = self.validation_noise.type_as(self.generator.model[0].weight)
-
-        # log sampled images
-        sample_imgs = self(noise)
+        sample_imgs, _, _ = self(noise)
         grid = torchvision.utils.make_grid(sample_imgs)
         # type: ignore
-        self.logger.experiment.add_image("generated_images_val",
+        self.logger.experiment.add_image("validation_images",
                                          grid, self.current_epoch)
